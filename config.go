@@ -1,9 +1,15 @@
 package main
 
 var config struct {
-	Local, Remote struct {
+	Local struct {
 		Network, Address string
 	}
+    Remote []struct {
+        Network, Address string
+        Cost uint64
+    }
+	NetworkInterface string
 	PrivateKeyPath string
-	Cost           uint64
+    AdvertiseInterval uint64
+    HelloInterval uint64
 }

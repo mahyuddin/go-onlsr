@@ -1,21 +1,26 @@
 package main
 
 import (
+//  "fmt"
 //	"time"
 
-	"github.com/go-ndn/log"
+//	"github.com/go-ndn/log"
 //	"github.com/go-ndn/mux"
-	"github.com/go-ndn/ndn"
+//	"github.com/go-ndn/ndn"
 //	"github.com/go-ndn/tlv"
 )
 
-type Neighbour struct {
+type neighbour struct {
 	Address string
 	Cost uint64
-	ndn.Face
-	log.Logger
+	Face face
 }
 
-func NewNeighbour()() {
-	
+type availableNeighbour struct {
+	Address string
+	MacAddress string
+}
+
+func newNeighbour()() {
+
 }

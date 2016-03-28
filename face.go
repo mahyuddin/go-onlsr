@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+    "sync"
 
 	"github.com/go-ndn/log"
 	"github.com/go-ndn/mux"
@@ -15,9 +16,10 @@ type face struct {
 	ndn.Face
 	*mux.Fetcher
 	log.Logger
+    Cost uint64
 }
 
-func newFace(network, address string, recv chan<- *ndn.Interest) (f *face, err error) {
+func newFace(network, address string, cost uint64, recv chan<- *ndn.Interest) (f *face, err error) {
 	conn, err := packet.Dial(network, address)
 	if err != nil {
 		return
@@ -25,6 +27,7 @@ func newFace(network, address string, recv chan<- *ndn.Interest) (f *face, err e
 	f = &face{
 		Face:    ndn.NewFace(conn, recv),
 		Fetcher: mux.NewFetcher(),
+        Cost: cost,
 	}
 	f.Fetcher.Use(mux.Assembler)
 
@@ -68,9 +71,9 @@ func (f *face) fetchRoute() (rib []ndn.RIBEntry) {
 	return
 }
 
-const (
-	advertiseIntv = 5 * time.Second
-)
+// const (
+// 	advertiseIntv = 5 * time.Second
+// )
 
 func (f *face) advertise(remote *face) {
 	// true = fresh, false = stale
@@ -94,7 +97,7 @@ func (f *face) advertise(remote *face) {
 		for _, routes := range localRoutes {
 			name := routes.Name.String()
 			for _, route := range routes.Route {
-				advCost := route.Cost + config.Cost
+				advCost := route.Cost + f.Cost
 				if cost, ok := index[name]; ok && cost < advCost {
 					continue
 				}
@@ -122,19 +125,21 @@ func (f *face) advertise(remote *face) {
 				}
 			}
 		}
-
+        
+        advertiseIntv := time.Duration(config.AdvertiseInterval) * time.Second
 		time.Sleep(advertiseIntv)
 	}
 }
 
-func (f *face) ServeNDN(w ndn.Sender, i *ndn.Interest) {
+func (f *face) ServeNDN(remote ndn.Sender, interest *ndn.Interest, wait sync.WaitGroup) {
 	go func() {
-		f.Println("forward", i.Name)
-		d, ok := <-f.SendInterest(i)
+		f.Println("forward", interest.Name)
+		data, ok := <-f.SendInterest(interest)
 		if !ok {
 			return
 		}
-		f.Println("receive", d.Name)
-		w.SendData(d)
+		f.Println("receive", data.Name)
+		remote.SendData(data)
+        wait.Done()
 	}()
 }

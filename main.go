@@ -1,16 +1,18 @@
 package main
 
 import (
+	// "fmt" // temporary
 	"encoding/json"
 	"flag"
 	"os"
+	"sync"
 
 	"github.com/go-ndn/log"
 	"github.com/go-ndn/ndn"
 )
 
 var (
-	flagConfig = flag.String("config", "bridge.json", "config path")
+	flagConfig = flag.String("config", "go-onlsr.json", "config path")
 	flagDebug  = flag.Bool("debug", false, "enable logging")
 )
 
@@ -46,24 +48,47 @@ func main() {
 	}
 	log.Println("key", key.Locator())
 
-	// local face
-	local, err := newFace(config.Local.Network, config.Local.Address, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer local.Close()
-	// remote face
-	recv := make(chan *ndn.Interest)
-	remote, err := newFace(config.Remote.Network, config.Remote.Address, recv)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer remote.Close()
+	// experiment using dummy neighbour list
+	var waitGroup sync.WaitGroup
 
-	go local.advertise(remote)
+    // get neighbour list from config file
+	neighbourList := config.Remote
 
-	// create remote tunnel
-	for i := range recv {
-		local.ServeNDN(remote, i)
+	for _, neighbour := range neighbourList {
+
+        go func(network string, address string, cost uint64) {
+            
+            // local face
+            local, err := newFace(config.Local.Network, config.Local.Address, 0, nil)
+            if err != nil {
+                log.Fatalln(err)
+            }
+            defer local.Close()
+
+            // create interest channel
+            interestChan := make(chan *ndn.Interest)
+
+            // remote face
+            remote, err := newFace(network, address, cost, interestChan)
+            if err != nil {
+                log.Fatalln(err)
+            }
+            defer remote.Close()
+
+            // advertise name prefix
+            go local.advertise(remote)
+
+            // create remote tunnel
+            for interest := range interestChan {
+                local.ServeNDN(remote, interest, waitGroup)
+            }
+
+            waitGroup.Done()
+
+        }(neighbour.Network, neighbour.Address, neighbour.Cost)
 	}
+    
+	waitGroup.Add(len(neighbourList))
+	waitGroup.Wait()
+
 }
