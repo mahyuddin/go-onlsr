@@ -23,5 +23,9 @@
     ],
 	"NetworkInterface": "wlan0",
     "AdvertiseInterval": 5,
+<<<<<<< HEAD
     "HelloInterval": 5
+=======
+    "HelloInterval": 1
+>>>>>>> origin/master
 }

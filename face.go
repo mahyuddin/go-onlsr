@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+    "sync"
 
 	"github.com/go-ndn/log"
 	"github.com/go-ndn/mux"
@@ -130,7 +131,11 @@ func (f *face) advertise(remote *face) {
 	}
 }
 
+<<<<<<< HEAD
 func (f *face) ServeNDN(remote ndn.Sender, interest *ndn.Interest) {
+=======
+func (f *face) ServeNDN(remote ndn.Sender, interest *ndn.Interest, wait sync.WaitGroup) {
+>>>>>>> origin/master
 	go func() {
 		f.Println("forward", interest.Name)
 		data, ok := <-f.SendInterest(interest)
@@ -139,5 +144,9 @@ func (f *face) ServeNDN(remote ndn.Sender, interest *ndn.Interest) {
 		}
 		f.Println("receive", data.Name)
 		remote.SendData(data)
+<<<<<<< HEAD
+=======
+        wait.Done()
+>>>>>>> origin/master
 	}()
 }

@@ -10,8 +10,9 @@ import (
 //	"github.com/go-ndn/tlv"
 )
 
-type Neighbour struct {
+type neighbour struct {
 	Address string
+<<<<<<< HEAD
     Network string
     Cost uint64
 	LocalFace *face
@@ -23,6 +24,15 @@ type AvailableNeighbour struct {
     Network string
 	MacAddress string
     Cost uint64
+=======
+	Cost uint64
+	Face face
+}
+
+type availableNeighbour struct {
+	Address string
+	MacAddress string
+>>>>>>> origin/master
 }
 
 func newNeighbour()() {
