@@ -2,11 +2,26 @@
 	"PrivateKeyPath": "key/default.pri",
 	"Local": {
 		"Network": "tcp",
-		"Address": ":6363"
+		"Address": "localhost:6363"
 	},
-	"Remote": {
-		"Network": "tcp",
-		"Address": ":6364"
-	},
-	"Cost": 30
+	"Remote" : [
+        {
+            "Network" : "tcp",
+            "Address" : "192.168.56.101:6363",
+            "Cost" : 30
+        },
+        {
+            "Network" : "tcp",
+            "Address" : "192.168.56.102:6363",
+            "Cost" : 30
+        },
+        {
+            "Network" : "tcp",
+            "Address" : "192.168.56.103:6363",
+            "Cost" : 30
+        }
+    ],
+	"NetworkInterface": "wlan0",
+    "AdvertiseInterval": 5,
+    "HelloInterval": 5
 }
