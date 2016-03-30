@@ -1,15 +1,10 @@
 package main
 
 import (
-	// "fmt" // temporary
 	"encoding/json"
 	"flag"
 	"os"
-<<<<<<< HEAD
 	"time"
-=======
-	"sync"
->>>>>>> origin/master
 
 	"github.com/go-ndn/log"
 	"github.com/go-ndn/ndn"
@@ -54,7 +49,6 @@ func main() {
 	log.Println("key", key.Locator())
 
 	// experiment using dummy neighbour list
-<<<<<<< HEAD
 
 	// get neighbour list from config file
 	neighbourList := config.Remote
@@ -129,49 +123,4 @@ func main() {
 		helloIntv := time.Duration(config.HelloInterval) * time.Second
 		time.Sleep(helloIntv)
 	} // while loop
-
-=======
-	var waitGroup sync.WaitGroup
-
-    // get neighbour list from config file
-	neighbourList := config.Remote
-
-	for _, neighbour := range neighbourList {
-
-        go func(network string, address string, cost uint64) {
-            
-            // local face
-            local, err := newFace(config.Local.Network, config.Local.Address, 0, nil)
-            if err != nil {
-                log.Fatalln(err)
-            }
-            defer local.Close()
-
-            // create interest channel
-            interestChan := make(chan *ndn.Interest)
-
-            // remote face
-            remote, err := newFace(network, address, cost, interestChan)
-            if err != nil {
-                log.Fatalln(err)
-            }
-            defer remote.Close()
-
-            // advertise name prefix
-            go local.advertise(remote)
-
-            // create remote tunnel
-            for interest := range interestChan {
-                local.ServeNDN(remote, interest, waitGroup)
-            }
-
-            waitGroup.Done()
-
-        }(neighbour.Network, neighbour.Address, neighbour.Cost)
-	}
-    
-	waitGroup.Add(len(neighbourList))
-	waitGroup.Wait()
-
->>>>>>> origin/master
 }
