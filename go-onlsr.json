@@ -4,6 +4,10 @@
 		"Network": "tcp",
 		"Address": "localhost:6363"
 	},
+    "Multicast": {
+		"Network": "udp",
+		"Address": "224.0.0.1:6364"
+	},
 	"Remote" : [
         {
             "Network" : "tcp",

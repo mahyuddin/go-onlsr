@@ -51,33 +51,38 @@ func main() {
 	// experiment using dummy neighbour list
 
 	// get neighbour list from config file
-	neighbourList := config.Remote
+	neighboursList := config.Remote
 
-	linkedNeighbours := make(map[string]Neighbour)
+	// Create linkedNeighbour struct map
+	// to store list of linked neighbours
+	linkedNeighbours := make(map[string]neighbour)
 
-    // dummy loop for temporary solution.
-	for neighbourList != nil {
-        
-        log.Println("Neighbour size :", len(linkedNeighbours))
+	// dummy loop for temporary solution.
+	for neighboursList != nil {
+
+		log.Println("Neighbourhood size :", len(linkedNeighbours))
 
 		// Check if linked neighbour is still available.
-		for address, neighbour := range linkedNeighbours {
-            checkLink, err := packet.Dial(neighbour.Network, address)
-            if err != nil {
-                delete(linkedNeighbours, address)
-                log.Println(err)
-            } else {
-                checkLink.Close()
-            }
-		}
-        
-        // create links between local forwarder and available neighbour forwarders
-		for _, neighbour := range neighbourList {
-            go createLink(neighbour, linkedNeighbours)
+		for address, linkedNode := range linkedNeighbours {
+			// cuba cari cara lain utk connection checking
+			if checkLink, err := packet.Dial(linkedNode.Network, address); err != nil {
+				if linkedNode.RemoteFace.Handler == nil {
+					log.Println("Face tarak ada...")
+				}
+				delete(linkedNeighbours, address)
+				log.Println(err)
+			} else {
+				checkLink.Close()
+			}
 		}
 
-        // dummy hello interval
+		// create links between local forwarder and available neighbour forwarders
+		for _, availableNode := range neighboursList {
+			go createLink(availableNode, linkedNeighbours)
+		}
+
+		// dummy hello interval
 		helloIntv := time.Duration(config.HelloInterval) * time.Second
 		time.Sleep(helloIntv)
-	} // while loop
+	} // dummy while loop
 }

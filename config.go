@@ -1,7 +1,7 @@
 package main
 
 var config struct {
-	Local struct {
+	Local, Multicast struct {
 		Network, Address string
 	}
     Remote []struct {

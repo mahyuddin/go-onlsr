@@ -15,7 +15,7 @@ type face struct {
 	ndn.Face
 	*mux.Fetcher
 	log.Logger
-    Cost uint64
+	Cost uint64
 }
 
 func newFace(network, address string, cost uint64, recv chan<- *ndn.Interest) (f *face, err error) {
@@ -26,7 +26,7 @@ func newFace(network, address string, cost uint64, recv chan<- *ndn.Interest) (f
 	f = &face{
 		Face:    ndn.NewFace(conn, recv),
 		Fetcher: mux.NewFetcher(),
-        Cost: cost,
+		Cost:    cost,
 	}
 	f.Fetcher.Use(mux.Assembler)
 
@@ -124,12 +124,11 @@ func (f *face) advertise(remote *face) {
 				}
 			}
 		}
-        
-        advertiseIntv := time.Duration(config.AdvertiseInterval) * time.Second
+
+		advertiseIntv := time.Duration(config.AdvertiseInterval) * time.Second
 		time.Sleep(advertiseIntv)
 	}
 }
-
 
 func (f *face) ServeNDN(remote ndn.Sender, interest *ndn.Interest) {
 	go func() {
