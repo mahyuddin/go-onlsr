@@ -62,7 +62,7 @@ func selfIPAddress(recvIPAddress string) (selfIP bool) {
 	return
 }
 
-func serveMulticastUDP(tempNode chan<- remoteNode) {
+func serveMulticastUDP(tempNode chan remoteNode) {
 	addr, err := net.ResolveUDPAddr(config.Multicast.Network, config.Multicast.Address)
 	if err != nil {
 		log.Fatalln("ResolveUDPAddr error:", err)
@@ -81,8 +81,7 @@ func serveMulticastUDP(tempNode chan<- remoteNode) {
 		if err != nil {
 			log.Fatalln("ReadFromUDP failed:", err)
 		}
-		node := multicastMsgHandler(dataSource, numOfBytes, dataBytes)
-		tempNode <- node
+		tempNode <- multicastMsgHandler(dataSource, numOfBytes, dataBytes)
 	}
 }
 
@@ -105,8 +104,9 @@ func neighbourhoodDiscovery(neighbourChan chan<- remoteNode) {
 	go serveMulticastUDP(tempNode)
 	go sendUDPHelloPacket()
 	for {
-		node := <-tempNode
-		neighbourChan <- node
+		// node := <-tempNode
+		// neighbourChan <- node
+		neighbourChan <- <- tempNode
 		time.Sleep(time.Duration(config.HelloInterval) * time.Second)
 	}
 
