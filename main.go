@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-ndn/log"
 	"github.com/go-ndn/ndn"
-	"github.com/go-ndn/packet"
+	// "github.com/go-ndn/packet"
 )
 
 var (
@@ -48,41 +48,25 @@ func main() {
 	}
 	log.Println("key", key.Locator())
 
-	// experiment using dummy neighbour list
+	// --------------- experiment using dummy neighbour list ---------------------
 
-	// get neighbour list from config file
-	neighboursList := config.Remote
-
-	// Create linkedNeighbour struct map
-	// to store list of linked neighbours
+	// channel for list of available single hop direct neighbour
+	neighbourChan := make(chan []struct {
+		Network, Address string
+		Cost             uint64
+	})
+    // Map to store lisf of linked neighbours
 	linkedNeighbours := make(map[string]neighbour)
-
-	// dummy loop for temporary solution.
-	for neighboursList != nil {
-
-		log.Println("Neighbourhood size :", len(linkedNeighbours))
-
-		// Check if linked neighbour is still available.
-		for address, linkedNode := range linkedNeighbours {
-			// cuba cari cara lain utk connection checking
-			if checkLink, err := packet.Dial(linkedNode.Network, address); err != nil {
-				if linkedNode.RemoteFace.Handler == nil {
-					log.Println("Face tarak ada...")
-				}
-				delete(linkedNeighbours, address)
-				log.Println(err)
-			} else {
-				checkLink.Close()
-			}
-		}
-
-		// create links between local forwarder and available neighbour forwarders
-		for _, availableNode := range neighboursList {
-			go createLink(availableNode, linkedNeighbours)
-		}
+        
+    // dummy loop for temporary solution.
+	for {
+        
+        go neighbourhoodDiscovery(neighbourChan)
+		go checkLinkedNeighbour(linkedNeighbours)    
+        go createLink(neighbourChan, linkedNeighbours)
 
 		// dummy hello interval
 		helloIntv := time.Duration(config.HelloInterval) * time.Second
 		time.Sleep(helloIntv)
-	} // dummy while loop
+	} // dummy for loop
 }
