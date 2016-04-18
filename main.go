@@ -16,9 +16,7 @@ var (
 	flagDebug  = flag.Bool("debug", false, "enable logging")
 )
 
-var (
-	key ndn.Key
-)
+var key ndn.Key
 
 func main() {
 	flag.Parse()
@@ -50,23 +48,16 @@ func main() {
 
 	// --------------- experiment using dummy neighbour list ---------------------
 
-	// channel for list of available single hop direct neighbour
-	neighbourChan := make(chan []struct {
-		Network, Address string
-		Cost             uint64
-	})
-    // Map to store lisf of linked neighbours
-	linkedNeighbours := make(map[string]neighbour)
-        
-    // dummy loop for temporary solution.
+	neighbourChan := make(chan remoteNode)
+	go neighbourhoodDiscovery(neighbourChan)
+
+	// dummy loop for temporary solution.
 	for {
-        
-        go neighbourhoodDiscovery(neighbourChan)
-		go checkLinkedNeighbour(linkedNeighbours)    
-        go createLink(neighbourChan, linkedNeighbours)
+
+		go checkLinkedNeighbour()
+		go createLink(neighbourChan)
 
 		// dummy hello interval
-		helloIntv := time.Duration(config.HelloInterval) * time.Second
-		time.Sleep(helloIntv)
+		time.Sleep(time.Duration(config.HelloInterval) * time.Second)
 	} // dummy for loop
 }
