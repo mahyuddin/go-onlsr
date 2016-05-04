@@ -16,8 +16,9 @@ var (
 	flagDebug  = flag.Bool("debug", false, "enable logging")
 )
 
-var key ndn.Key
-
+var ( 
+	key ndn.Key
+)
 func main() {
 	flag.Parse()
 

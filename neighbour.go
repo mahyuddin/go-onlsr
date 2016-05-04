@@ -16,7 +16,9 @@ import (
 
 const maxDatagramSize = 8192
 
-var linkedNeighbours map[string]neighbour
+var (
+	linkedNeighbours map[string]neighbour
+)
 
 // Neighbour struct to store captured neighbour
 type neighbour struct {
@@ -67,21 +69,25 @@ func serveMulticastUDP(tempNode chan remoteNode) {
 	if err != nil {
 		log.Fatalln("ResolveUDPAddr error:", err)
 	}
-	l, err := net.ListenMulticastUDP(config.Multicast.Network, nil, addr)
+	listen, err := net.ListenMulticastUDP(config.Multicast.Network, nil, addr)
 	if err != nil {
 		log.Fatalln("ListenMulticastUDP error:", err)
 	}
-	err = l.SetReadBuffer(maxDatagramSize)
+	err = listen.SetReadBuffer(maxDatagramSize)
 	if err != nil {
 		log.Fatalln("SetReadBuffer error:", err)
 	}
 	for {
 		dataBytes := make([]byte, maxDatagramSize)
-		numOfBytes, dataSource, err := l.ReadFromUDP(dataBytes)
+		numOfBytes, dataSource, err := listen.ReadFromUDP(dataBytes)
 		if err != nil {
 			log.Fatalln("ReadFromUDP failed:", err)
 		}
-		tempNode <- multicastMsgHandler(dataSource, numOfBytes, dataBytes)
+		node := multicastMsgHandler(dataSource, numOfBytes, dataBytes)
+		log.Println("Detected neighbour node address = ", node.Address)
+		tempNode <- node
+		
+		time.Sleep(time.Duration(config.HelloInterval) * time.Second)
 	}
 }
 
@@ -94,6 +100,7 @@ func sendUDPHelloPacket() {
 	connect, err := net.DialUDP(config.Multicast.Network, nil, addr)
 	for {
 		connect.Write([]byte("hello\n"))
+		
 		time.Sleep(time.Duration(config.HelloInterval) * time.Second)
 	}
 }
@@ -106,7 +113,7 @@ func neighbourhoodDiscovery(neighbourChan chan<- remoteNode) {
 	for {
 		// node := <-tempNode
 		// neighbourChan <- node
-		neighbourChan <- <- tempNode
+		neighbourChan <- <-tempNode
 		time.Sleep(time.Duration(config.HelloInterval) * time.Second)
 	}
 
@@ -138,6 +145,8 @@ func createLink(neighbourChan <-chan remoteNode) {
 	if _, linked := linkedNeighbours[neighbourNode.Address]; !linked {
 
 		log.Println("Create link between remote and local face")
+		log.Println("Neighbour Network :", neighbourNode.Network)
+		log.Println("Neighbour Address :", neighbourNode.Address)
 
 		// create interest channel
 		interestChan := make(chan *ndn.Interest)

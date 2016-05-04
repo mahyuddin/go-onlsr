@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/go-ndn/log"
@@ -29,7 +30,6 @@ func newFace(network, address string, cost uint64, recv chan<- *ndn.Interest) (f
 		Cost:    cost,
 	}
 	f.Fetcher.Use(mux.Assembler)
-
 	if *flagDebug {
 		f.Logger = log.New(log.Stderr, fmt.Sprintf("[%s] ", conn.RemoteAddr()))
 	} else {
